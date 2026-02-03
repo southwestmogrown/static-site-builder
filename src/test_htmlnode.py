@@ -1,6 +1,6 @@
 import unittest
 
-from htmlnode import HTMLNode, LeafNode, ParentNode
+from htmlnode import *
 
 class TestHTMLNode(unittest.TestCase):
   def test_to_html_exception(self):
@@ -46,6 +46,12 @@ def test_to_html_with_grandchildren(self):
         parent_node.to_html(),
         "<div><span><b>grandchild</b></span></div>",
     )
+
+def test_text(self):
+    node = TextNode("This is a text node", TextType.TEXT)
+    html_node = text_node_to_html_node(node)
+    self.assertEqual(html_node.tag, None)
+    self.assertEqual(html_node.value, "This is a text node")
 
 
 

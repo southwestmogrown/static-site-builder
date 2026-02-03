@@ -78,8 +78,25 @@ def text_node_to_html_node(text_node):
     case TextType.PLAIN:
       n = LeafNode(None, text_node.text)
       return n
+    case TextType.BOLD:
+      n = LeafNode('b', text_node.text)
+      return n
+    case TextType.ITALIC:
+      n = LeafNode('i', text_node.text)
+      return n
+    case TextType.CODE:
+      n = LeafNode('code', text_node.text)
+      return n
+    case TextType.LINK:
+      n = LeafNode('a', text_node.text, props={"href": text_node.url})
+      return n
+    case TextType.IMAGE:
+      n = LeafNode('img', '', props={"src": text_node.url, "alt": text_node.text})
+      return n
+    case _:
+      raise Exception("Must use valid text type")
 
 
-tn = TextNode("hello world", TextType.PLAIN)
+# tn = TextNode("hello world", TextType.PLAIN)
 
-print(text_node_to_html_node(tn))
+# print(text_node_to_html_node(tn))
