@@ -2,6 +2,7 @@ import unittest
 
 from htmlnode import *
 
+
 class TestHTMLNode(unittest.TestCase):
   def test_to_html_exception(self):
     n = HTMLNode()
@@ -52,8 +53,6 @@ def test_text(self):
     html_node = text_node_to_html_node(node)
     self.assertEqual(html_node.tag, None)
     self.assertEqual(html_node.value, "This is a text node")
-
-
 
 
 
