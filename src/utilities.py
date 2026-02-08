@@ -1,6 +1,7 @@
 import re
 from enum import Enum
 from textnode import *
+from htmlnode import *
 
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
   new_nodes = []
@@ -89,21 +90,22 @@ def text_to_text_nodes(text):
 
   return code
 
-def markdown_to_blocks(md):
-  s = md.split("\n\n")
+def markdown_to_blocks(markdown):
+    raw_blocks = markdown.split("\n\n")
+    blocks = []
 
-  s = [x.strip() for x in s]
+    for block in raw_blocks:
+        block = block.strip()
+        if block == "":
+            continue
 
-  for i in range(len(s)):
-    block = s[i]
+        lines = block.split("\n")
+        clean_lines = [line.strip() for line in lines]
+        block = "\n".join(clean_lines)
 
-    if block != "":
-      lines = block.split("\n")
+        blocks.append(block)
 
-      clean_lines = [line.strip() for line in lines]
-
-      s[i] = "\n".join(clean_lines)
-  return s
+    return blocks
 
 
 class BlockType(Enum):
@@ -114,16 +116,17 @@ class BlockType(Enum):
   UNORDERED_LIST = "unordered_list"
   ORDERED_LIST = "ordered_list"
 
-heading_prefixes = [
-  "# ",
-  "## ",
-  "### ",
-  "#### ",
-  "##### ",
-  "###### ",
-]
+
 
 def block_to_block_type(block):
+  heading_prefixes = [
+    "# ",
+    "## ",
+    "### ",
+    "#### ",
+    "##### ",
+    "###### ",
+  ]
   for pf in heading_prefixes:
     if block.startswith(pf):
       return BlockType.HEADING
@@ -151,13 +154,154 @@ def block_to_block_type(block):
   return BlockType.PARAGRAPH
   
 
-# h = """
-# 1. this
-# 2. is
-# 3. an
-# 4. ordered
-# 5. list
-# """
-# h = markdown_to_blocks(h)
-# print(h)
-# print(block_to_block_type(h[0]))
+def detect_heading_type(text):
+  if text.startswith("###### "):
+      s = text[7:]
+      return ["h6", s]
+  elif text.startswith("##### "):
+      s = text[6:]
+      return ["h5", s]
+  elif text.startswith("#### "):
+      s = text[5:]
+      return ["h4", s]
+  elif text.startswith("### "):
+      s = text[4:]
+      return ["h3", s]
+  elif text.startswith("## "):
+      s = text[3:]
+      return ["h2", s]
+  elif text.startswith("# "):
+      s = text[2:]
+      return ["h1", s]
+  else:
+      raise Exception("Invalid Markdown")
+  
+def text_to_html_nodes(text):
+  text_nodes = text_to_text_nodes(text)
+  html_nodes = [text_node_to_html_node(node) for node in text_nodes]
+  return html_nodes
+  
+def handle_paragraphs(block):
+    lines = block.split("\n")
+    clean_lines = [line.strip() for line in lines if line.strip() != ""]
+    paragraph_text = " ".join(clean_lines)
+    html_nodes = text_to_html_nodes(paragraph_text)
+    block_node = ParentNode("p", children=html_nodes)
+    return block_node
+
+def handle_headings(block):
+  tag, text = detect_heading_type(block)
+  html_nodes = text_to_html_nodes(text)
+
+  block_node = ParentNode(tag, children=html_nodes)
+  return block_node
+
+def handle_quotes(block):
+  block = block[1:].strip()
+  html_nodes = text_to_html_nodes(block)
+  block_node = ParentNode("blockqoute", children=html_nodes)
+  return block_node
+
+def handle_lists(block):
+  bt = block_to_block_type(block)
+  tag = "ol" if bt is BlockType.ORDERED_LIST else "ul"
+  lines = block.split("\n")
+  if bt is BlockType.UNORDERED_LIST:
+     lines = [line[2:] for line in lines]
+
+  clean_lines = [line.strip() for line in lines if line != ""]
+  html_nodes = [text_to_html_nodes(line)[0] for line in clean_lines if line != ""]
+  li_nodes = []
+  for node in html_nodes:
+      li = ParentNode("li", children=[])
+      li.children.append(node)
+      li_nodes.append(li)
+  
+  
+  block_node = ParentNode(tag, li_nodes)
+  return block_node
+
+def handle_code(block):
+  lines = block.strip().split("\n")
+  txt = "\n".join(lines)
+  t_node = TextNode(txt[4:-3], text_type=TextType.TEXT)
+  html_node = text_node_to_html_node(t_node)
+  code_node = ParentNode("code", [html_node])
+  block_node = ParentNode("pre", [code_node])
+  return block_node
+
+
+def markdown_to_html_node(markdown):
+  html = ParentNode("div", [])
+  blocks = markdown_to_blocks(markdown)
+
+  for block in blocks:
+      bt = block_to_block_type(block)
+      match bt:
+          case BlockType.PARAGRAPH:
+            block_node = handle_paragraphs(block)
+            html.children.append(block_node)
+          case BlockType.HEADING:
+            block_node = handle_headings(block)
+            html.children.append(block_node)
+          case BlockType.QUOTE:
+            block_node = handle_quotes(block)
+            html.children.append(block_node)
+          case BlockType.ORDERED_LIST:
+            block_node = handle_lists(block)
+            html.children.append(block_node)
+          case BlockType.UNORDERED_LIST:
+            block_node = handle_lists(block)
+            html.children.append(block_node)
+          case BlockType.CODE:
+            block_node = handle_code(block)
+            html.children.append(block_node)
+
+  return html
+      
+    
+
+
+
+
+
+# md = """
+
+#   This is **bolded** paragraph
+#   text in a p
+#   tag here
+
+#   This is another paragraph with _italic_ text and `code` here
+
+#   ###### This is an h6
+
+#   ## This is an h2
+
+#   # And an h1 for good measure
+
+#   >This is a quote block without the space
+
+#   > This is a qoute block with the space added
+
+
+#   1. This
+#   2. is
+#   3. an
+#   4. ordered
+#   5. list
+
+#   - This
+#   - is
+#   - an
+#   - unordered
+#   - list
+
+#   ```
+#   This is text that _should_ remain
+#   the **same** even with inline stuff
+#   ```
+
+#   """
+
+# node = markdown_to_html_node(md)
+# print(node.to_html())

@@ -151,3 +151,169 @@ class TestExtraction(unittest.TestCase):
       BlockType.PARAGRAPH, 
       BlockType.HEADING,
     ], res)
+
+  
+  def test_block_to_block_type_ol(self):
+    h = """
+    1. this
+    2. is
+    3. an
+    4. ordered
+    5. list
+    """
+
+    s = markdown_to_blocks(h)
+    r = block_to_block_type(s[0])
+
+    self.assertEqual(BlockType.ORDERED_LIST, r)
+
+  def test_paragraphs(self):
+    md = """
+    This is **bolded** paragraph
+    text in a p
+    tag here
+
+    This is another paragraph with _italic_ text and `code` here
+
+    """
+
+    node = markdown_to_html_node(md)
+    html = node.to_html()
+    self.assertEqual(
+        html,
+        "<div><p>This is <b>bolded</b> paragraph text in a p tag here</p><p>This is another paragraph with <i>italic</i> text and <code>code</code> here</p></div>",
+    )
+
+  def test_headings(self):
+    md = """
+
+    ###### This is an h6
+
+    ## This is an h2
+
+    # And an h1 for good measure
+
+    """
+
+    node = markdown_to_html_node(md)
+    html = node.to_html()
+    self.assertEqual(
+        html,
+        "<div><h6>This is an h6</h6><h2>This is an h2</h2><h1>And an h1 for good measure</h1></div>",
+    )
+
+  def test_quotes(self):
+    md = """
+
+    >This is a quote block without the space
+
+    > This is a qoute block with the space added
+
+    """
+
+    node = markdown_to_html_node(md)
+    html = node.to_html()
+    self.assertEqual(
+        html,
+        "<div><blockqoute>This is a quote block without the space</blockqoute><blockqoute>This is a qoute block with the space added</blockqoute></div>",
+    )
+
+
+  def test_ordered_lists(self):
+    md = """
+
+    1. This
+    2. is
+    3. an
+    4. ordered
+    5. list
+
+    """
+
+    node = markdown_to_html_node(md)
+    html = node.to_html()
+    self.assertEqual(
+        html,
+        "<div><ol><li>1. This</li><li>2. is</li><li>3. an</li><li>4. ordered</li><li>5. list</li></ol></div>",
+    )
+
+  def test_ordered_lists(self):
+    md = """
+
+    - This
+    - is
+    - an
+    - unordered
+    - list
+
+    """
+
+    node = markdown_to_html_node(md)
+    html = node.to_html()
+    self.assertEqual(
+        html,
+        "<div><ul><li>This</li><li>is</li><li>an</li><li>unordered</li><li>list</li></ul></div>",
+    )
+
+
+  def test_codeblock(self):
+    md = """
+    ```
+    This is text that _should_ remain
+    the **same** even with inline stuff
+    ```
+    """
+
+    node = markdown_to_html_node(md)
+    html = node.to_html()
+    self.assertEqual(
+        html,
+        "<div><pre><code>This is text that _should_ remain\nthe **same** even with inline stuff\n</code></pre></div>",
+    )
+
+  def markdown_to_html_node(self):
+
+    md = """
+
+    This is **bolded** paragraph
+    text in a p
+    tag here
+
+    This is another paragraph with _italic_ text and `code` here
+
+    ###### This is an h6
+
+    ## This is an h2
+
+    # And an h1 for good measure
+
+    >This is a quote block without the space
+
+    > This is a qoute block with the space added
+
+
+    1. This
+    2. is
+    3. an
+    4. ordered
+    5. list
+
+    - This
+    - is
+    - an
+    - unordered
+    - list
+
+    ```
+    This is text that _should_ remain
+    the **same** even with inline stuff
+    ```
+
+    """
+
+    node = markdown_to_html_node(md)
+    html = node.to_html()
+    self.assertEqual(
+        html,
+        "<div><p>This is <b>bolded</b> paragraph text in a p tag here</p><p>This is another paragraph with <i>italic</i> text and <code>code</code> here</p><h6>This is an h6</h6><h2>This is an h2</h2><h1>And an h1 for good measure</h1><blockqoute>This is a quote block without the space</blockqoute><blockqoute>This is a qoute block with the space added</blockqoute><ol><li>1. This</li><li>2. is</li><li>3. an</li><li>4. ordered</li><li>5. list</li></ol><ul><li>This</li><li>is</li><li>an</li><li>unordered</li><li>list</li></ul><pre><code>This is text that _should_ remain\nthe **same** even with inline stuff\n</code></pre></div>",
+    )
