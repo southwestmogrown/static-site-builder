@@ -2,7 +2,10 @@ import os, shutil, sys
 from textnode import *
 from utilities import *
 
-def clean_and_populate_public(src, dest):
+
+
+def clean_and_populate_public(src, dest, basepath="/"):
+
   if os.path.exists(dest):
     shutil.rmtree(dest)
 
@@ -20,7 +23,6 @@ def clean_and_populate_public(src, dest):
 
 def generate_page(from_path, template_path, dest_path, basepath="/"):
   print(f"Generating page from {from_path} to {dest_path} using {template_path}")
-
   content = None
   template = None
   with open(from_path, "r") as f:
@@ -55,12 +57,12 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, bas
       generate_pages_recursive(new_path, template_path, new_dest)
 
 
-basepath = sys.argv
+
 
 
 def main():
-  pass
-  clean_and_populate_public("static", "docs")
+  basepath = sys.argv[1]
+  clean_and_populate_public("static", "docs", basepath)
   generate_pages_recursive("content", "template.html", "docs", basepath)
 
 
