@@ -17,7 +17,7 @@ class HTMLNode:
     s = ""
 
     for prop in self.props:
-      s += f"{prop}:'{self.props[prop]}' "
+      s += f'{prop}="{self.props[prop]}" '
     
     return s
   
@@ -91,12 +91,7 @@ def text_node_to_html_node(text_node):
       n = LeafNode('a', text_node.text, props={"href": text_node.url})
       return n
     case TextType.IMAGE:
-      n = LeafNode('img', '', props={"src": text_node.url, "alt": text_node.text})
+      n = LeafNode('img', text_node.text, props={"src": text_node.url, "alt": text_node.text})
       return n
     case _:
       raise Exception("Must use valid text type")
-
-
-# tn = TextNode("hello world", TextType.PLAIN)
-
-# print(text_node_to_html_node(tn))

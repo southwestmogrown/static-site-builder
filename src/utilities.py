@@ -3,6 +3,13 @@ from enum import Enum
 from textnode import *
 from htmlnode import *
 
+def extract_title(markdown):
+  blocks = markdown_to_blocks(markdown)
+  for block in blocks:
+    if block.startswith("# "):
+        return block[2:].strip()
+  raise Exception("Page has no title.")
+
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
   new_nodes = []
 
@@ -12,17 +19,21 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
       continue
 
     try:
-      
-      pre, delimited, post = node.text.split(delimiter)
+      res = node.text.split(delimiter)
+      t_flag = False
+      nodes = []
+
+      for x in res:
+        if t_flag == False:
+          t_flag = True
+          nodes.append(TextNode(x, TextType.TEXT))
+        else:
+           t_flag = False
+           nodes.append(TextNode(x, text_type))
     except:
       raise Exception("Invalid Markdown")
-    
 
-    n1 = TextNode(pre, TextType.TEXT)
-    n2 = TextNode(delimited, text_type)
-    n3 = TextNode(post, TextType.TEXT)
-
-    new_nodes.extend([n1, n2, n3])
+    new_nodes.extend(nodes)
 
   return new_nodes
 
@@ -54,6 +65,7 @@ def split_nodes_image(old_nodes):
       str = a
     if str != "":
       new_nodes.append(TextNode(str, TextType.TEXT))
+
   return new_nodes
       
 
@@ -87,7 +99,6 @@ def text_to_text_nodes(text):
   bold = split_nodes_delimiter(img_handled, "**", TextType.BOLD)
   italic = split_nodes_delimiter(bold, "_", TextType.ITALIC)
   code = split_nodes_delimiter(italic, "`", TextType.CODE)
-
   return code
 
 def markdown_to_blocks(markdown):
@@ -178,7 +189,7 @@ def detect_heading_type(text):
   
 def text_to_html_nodes(text):
   text_nodes = text_to_text_nodes(text)
-  html_nodes = [text_node_to_html_node(node) for node in text_nodes]
+  html_nodes = [text_node_to_html_node(node) for node in text_nodes if node.text != ""]
   return html_nodes
   
 def handle_paragraphs(block):
@@ -197,9 +208,19 @@ def handle_headings(block):
   return block_node
 
 def handle_quotes(block):
-  block = block[1:].strip()
-  html_nodes = text_to_html_nodes(block)
-  block_node = ParentNode("blockqoute", children=html_nodes)
+  block = block.strip()
+  lines = block.split("\n")
+  clean_lines = []
+  for line in lines:
+    if line.startswith(">") and len(line) > 1:
+      clean_lines.append(line[1:].strip())
+      
+    
+  text_nodes = []
+  for line in clean_lines:
+     text_nodes.extend(text_to_text_nodes(line))
+  html_nodes = [text_node_to_html_node(node) for node in text_nodes]
+  block_node = ParentNode("blockquote", children=html_nodes)
   return block_node
 
 def handle_lists(block):
@@ -208,13 +229,19 @@ def handle_lists(block):
   lines = block.split("\n")
   if bt is BlockType.UNORDERED_LIST:
      lines = [line[2:] for line in lines]
+  elif bt is BlockType.ORDERED_LIST:
+     lines = [line[3:] for line in lines]
 
   clean_lines = [line.strip() for line in lines if line != ""]
-  html_nodes = [text_to_html_nodes(line)[0] for line in clean_lines if line != ""]
+  
+  html_nodes = []
+  for line in clean_lines:
+     html_nodes.append(text_to_html_nodes(line))
+  
   li_nodes = []
   for node in html_nodes:
       li = ParentNode("li", children=[])
-      li.children.append(node)
+      li.children.extend(node)
       li_nodes.append(li)
   
   
@@ -256,6 +283,5 @@ def markdown_to_html_node(markdown):
           case BlockType.CODE:
             block_node = handle_code(block)
             html.children.append(block_node)
-
   return html
       

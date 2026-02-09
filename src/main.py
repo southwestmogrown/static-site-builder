@@ -1,5 +1,6 @@
 import os, shutil
 from textnode import *
+from utilities import *
 
 def clean_and_populate_public(src, dest):
   if os.path.exists(dest):
@@ -17,15 +18,45 @@ def clean_and_populate_public(src, dest):
       new_dest = os.path.join(dest, path)
       clean_and_populate_public(new_src, new_dest)
 
+def generate_page(from_path, template_path, dest_path):
+  print(f"Generating page from {from_path} to {dest_path} using {template_path}")
 
+  content = None
+  template = None
+  with open(from_path, "r") as f:
+    content = f.read()
+    with open(template_path, "r") as f:
+      template = f.read()
 
+      title = extract_title(content)
+      html_content = markdown_to_html_node(content)
+      page = template.replace("{{ Title }}", title)
+      page = page.replace("{{ Content }}", html_content.to_html())
 
+      dir, file = os.path.split(dest_path)
+      if not os.path.exists(dir):
+        os.makedirs(dir)
+      
+      with open(dest_path, "w") as np:
+        np.write(page)
 
-    
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+  src_paths = os.listdir(dir_path_content)
+
+  for path in src_paths:
+    new_path = os.path.join(dir_path_content, path)
+    new_dest = os.path.join(dest_dir_path, path)
+    new_dest_html = new_dest.replace("md", "html")
+    if os.path.isfile(new_path):
+      generate_page(new_path, template_path, new_dest_html)
+    else:
+      generate_pages_recursive(new_path, template_path, new_dest)
+
 
 def main():
+  pass
   clean_and_populate_public("static", "public")
-
+  generate_pages_recursive("content", "template.html", "public")
 
 
 

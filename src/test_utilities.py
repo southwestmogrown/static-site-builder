@@ -317,3 +317,18 @@ class TestExtraction(unittest.TestCase):
         html,
         "<div><p>This is <b>bolded</b> paragraph text in a p tag here</p><p>This is another paragraph with <i>italic</i> text and <code>code</code> here</p><h6>This is an h6</h6><h2>This is an h2</h2><h1>And an h1 for good measure</h1><blockqoute>This is a quote block without the space</blockqoute><blockqoute>This is a qoute block with the space added</blockqoute><ol><li>1. This</li><li>2. is</li><li>3. an</li><li>4. ordered</li><li>5. list</li></ol><ul><li>This</li><li>is</li><li>an</li><li>unordered</li><li>list</li></ul><pre><code>This is text that _should_ remain\nthe **same** even with inline stuff\n</code></pre></div>",
     )
+
+  def test_extract_title(self):
+    md = """
+    # The h1 title is right here
+
+
+    Some other paragraphs.
+
+    - and
+    - a 
+    - list
+    """
+
+    res = extract_title(md)
+    self.assertEqual(res, "The h1 title is right here")
