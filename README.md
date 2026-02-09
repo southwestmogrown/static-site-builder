@@ -50,7 +50,7 @@ static-site-builder/
 
 ### Prerequisites
 
-- Python 3.x (see `.python-version` for specific version)
+- Python 3.10.x (see `.python-version` for specific version)
 - Bash shell for running build scripts
 
 ### Installation
