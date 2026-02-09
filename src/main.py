@@ -55,7 +55,7 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, bas
       generate_pages_recursive(new_path, template_path, new_dest)
 
 
-basepath = sys.argv or "/"
+basepath = sys.argv
 
 
 def main():
