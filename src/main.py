@@ -4,7 +4,7 @@ from utilities import *
 
 
 
-def clean_and_populate_public(src, dest, basepath="/"):
+def clean_and_populate_public(src, dest):
 
   if os.path.exists(dest):
     shutil.rmtree(dest)
@@ -21,7 +21,7 @@ def clean_and_populate_public(src, dest, basepath="/"):
       new_dest = os.path.join(dest, path)
       clean_and_populate_public(new_src, new_dest)
 
-def generate_page(from_path, template_path, dest_path, basepath="/"):
+def generate_page(from_path, template_path, dest_path, basepath):
   print(f"Generating page from {from_path} to {dest_path} using {template_path}")
   content = None
   template = None
@@ -34,8 +34,9 @@ def generate_page(from_path, template_path, dest_path, basepath="/"):
       html_content = markdown_to_html_node(content)
       page = template.replace("{{ Title }}", title)
       page = page.replace("{{ Content }}", html_content.to_html())
-      page = page.replace('href="/', f'href="{basepath}"')
-      page = page.replace('src="/', f'src="{basepath}"')
+      print(f"Basepath: {basepath}")
+      page = page.replace('href="/', f'href="{basepath}')
+      page = page.replace('src="/', f'src="{basepath}')
 
       dir, file = os.path.split(dest_path)
       if not os.path.exists(dir):
@@ -44,7 +45,7 @@ def generate_page(from_path, template_path, dest_path, basepath="/"):
       with open(dest_path, "w") as np:
         np.write(page)
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, basepath="/"):
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, basepath):
   src_paths = os.listdir(dir_path_content)
 
   for path in src_paths:
@@ -54,7 +55,7 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, bas
     if os.path.isfile(new_path):
       generate_page(new_path, template_path, new_dest_html, basepath)
     else:
-      generate_pages_recursive(new_path, template_path, new_dest)
+      generate_pages_recursive(new_path, template_path, new_dest, basepath)
 
 
 
@@ -62,7 +63,7 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, bas
 
 def main():
   basepath = sys.argv[1]
-  clean_and_populate_public("static", "docs", basepath)
+  clean_and_populate_public("static", "docs")
   generate_pages_recursive("content", "template.html", "docs", basepath)
 
 
